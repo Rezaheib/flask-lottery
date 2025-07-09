@@ -1,0 +1,165 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>فرم شرکت در قرعه‌کشی</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Vazirmatn&display=swap" rel="stylesheet">
+  <style>
+    body {
+      font-family: 'Vazirmatn', sans-serif;
+      background:
+        linear-gradient(to right, #000000cc, #000000cc),
+        url('https://cdn.pixabay.com/photo/2016/04/01/11/50/engine-1308572_960_720.jpg') no-repeat center center;
+      background-size: cover;
+      height: 100vh;
+      margin: 0;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+    }
+
+    .form-container {
+      background: rgba(255, 255, 255, 0.95);
+      padding: 2rem;
+      border-radius: 1.5rem;
+      width: 100%;
+      max-width: 420px;
+      box-shadow: 0 0 25px rgba(0, 0, 0, 0.5);
+      animation: slideIn 1.2s ease forwards;
+      box-sizing: border-box;
+    }
+
+    @keyframes slideIn {
+      0% { transform: translateY(100vh); opacity: 0; }
+      100% { transform: translateY(0); opacity: 1; }
+    }
+
+    #captchaImage {
+      width: 100%;
+      max-width: 180px;
+      height: 50px;
+      border: 1px solid #ccc;
+      border-radius: 6px;
+      object-fit: cover;
+    }
+
+    #refreshCaptchaBtn {
+      background: none;
+      border: none;
+      font-size: 1.3rem;
+      color: #4f46e5;
+      cursor: pointer;
+      margin-right: 0.5rem;
+    }
+  </style>
+</head>
+<body>
+  <div class="form-container" role="main">
+    <h2 class="text-center text-xl font-extrabold text-indigo-700 mb-4">فرم شرکت در قرعه‌کشی</h2>
+
+    <!-- پیام‌های فلش -->
+    {% with messages = get_flashed_messages(with_categories=true) %}
+      {% if messages %}
+        <ul class="mb-4" id="flashMessages">
+          {% for category, message in messages %}
+            <li class="text-sm p-2 rounded mb-2 
+              {% if category == 'danger' %}bg-red-100 text-red-700
+              {% elif category == 'success' %}bg-green-100 text-green-700
+              {% endif %}">
+              {{ message }}
+            </li>
+          {% endfor %}
+        </ul>
+      {% endif %}
+    {% endwith %}
+
+    <form method="POST" enctype="multipart/form-data" novalidate>
+      <label for="fullname" class="block mb-1 font-semibold">نام و نام خانوادگی</label>
+      <input id="fullname" name="fullname" type="text" required lang="fa" dir="rtl"
+        placeholder="مثلاً: علی رضایی"
+        class="w-full p-2 mb-2 rounded border border-gray-300">
+
+      <label for="phone" class="block mb-1 font-semibold">شماره موبایل</label>
+      <input id="phone" name="phone" type="tel" pattern="0\d{10}" required
+        class="w-full p-2 mb-2 rounded border border-gray-300 text-right"
+        dir="rtl" placeholder="مثلاً: 09123456789">
+
+      <label for="card_used" class="block mb-1 font-semibold">شماره کارت بانکی</label>
+      <input id="card_used" name="card_used" type="text" pattern="\d{16}" required
+        class="w-full p-2 mb-2 rounded border border-gray-300" placeholder="16 رقم">
+
+      <label for="card_owner" class="block mb-1 font-semibold">نام صاحب کارت</label>
+      <input id="card_owner" name="card_owner" type="text" required lang="fa" dir="rtl"
+        placeholder="مثلاً: مهدی اکبری"
+        class="w-full p-2 mb-2 rounded border border-gray-300">
+
+      <label for="receipt" class="block mb-1 font-semibold">آپلود فیش پرداخت</label>
+      <input id="receipt" name="receipt" type="file" accept="image/*" required
+        class="w-full p-2 mb-2">
+
+      <label for="captcha" class="block mb-1 font-semibold flex items-center">
+        <span>کد امنیتی:</span>
+        <img id="captchaImage" src="/captcha_image" alt="کد امنیتی" class="ml-2">
+        <button type="button" id="refreshCaptchaBtn" title="تغییر کد">🔄</button>
+      </label>
+
+      <input id="captcha" name="captcha" type="text" required
+        class="w-full p-2 mb-4 rounded border border-gray-300"
+        placeholder="کد را وارد کنید">
+
+      <button type="submit"
+        class="w-full bg-indigo-600 hover:bg-indigo-700 text-white py-2 rounded font-bold transition-colors duration-200">
+        ثبت اطلاعات
+      </button>
+    </form>
+  </div>
+
+  <!-- اسکریپت‌ها -->
+  <script>
+    // رفرش کپچا تصویری
+    document.getElementById('refreshCaptchaBtn').addEventListener('click', () => {
+      const captchaImg = document.getElementById('captchaImage');
+      captchaImg.src = '/captcha_image?' + new Date().getTime();
+      document.getElementById('captcha').value = '';
+    });
+
+    // حذف پیام فلش بعد از ۱۰ ثانیه
+    window.addEventListener('DOMContentLoaded', () => {
+      const flashBox = document.getElementById('flashMessages');
+      if (flashBox) {
+        setTimeout(() => {
+          flashBox.style.opacity = '0';
+          flashBox.style.transition = 'opacity 0.5s ease';
+          setTimeout(() => flashBox.remove(), 500);
+        }, 10000);
+      }
+    });
+
+    // بررسی فارسی بودن نام‌ها
+    function isPersian(text) {
+      const persianRegex = /^[\u0600-\u06FF\s]+$/;
+      return persianRegex.test(text);
+    }
+
+    document.addEventListener('DOMContentLoaded', () => {
+      const persianFields = [
+        { id: 'fullname', name: 'نام و نام خانوادگی' },
+        { id: 'card_owner', name: 'نام صاحب کارت' }
+      ];
+
+      persianFields.forEach(field => {
+        const input = document.getElementById(field.id);
+        input.addEventListener('input', () => {
+          if (input.value && !isPersian(input.value)) {
+            input.setCustomValidity(`لطفاً ${field.name} را با صفحه‌کلید فارسی وارد کنید`);
+          } else {
+            input.setCustomValidity('');
+          }
+        });
+      });
+    });
+  </script>
+</body>
+</html>
